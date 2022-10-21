@@ -1,0 +1,11 @@
+{
+    "name": "TrackR",
+    "version": "1.0.0",
+    "description": "Track your current job applications",
+    "manifest_version": 3,
+    "author": "Phamily",
+    "action":{
+        "default_popup": "index.html",
+        "default_title": "TrackR"
+    }
+}
