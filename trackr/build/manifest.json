@@ -1,0 +1,18 @@
+{
+  "name": "TrackR",
+  "description": "Keep track of your job applications ",
+  "version": "1.0",
+  "manifest_version": 2,
+  "browser_action": {
+    "default_popup": "index.html",
+    "default_title": "Open the popup"
+  },
+  "icons": {
+    "16": "tR.png",
+    "48": "tR.png",
+    "128": "tR.png"
+  },
+  "permissions": [
+    "activeTab"
+  ]
+}
