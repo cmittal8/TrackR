@@ -1,3 +1,4 @@
+/*global chrome*/
 import React from 'react';
 import logo from './official_tR.png';
 import 'reactjs-popup/dist/index.css';
@@ -6,14 +7,11 @@ import { useState, useEffect } from 'react';
 import 'reactjs-popup/dist/index.css';
 import Popup from 'reactjs-popup'
 import moment from 'moment';
-import { GoogleLogin } from '@react-oauth/google';
-import { useGoogleApi, GoogleApiProvider } from 'react-gapi';
-import AuthPage from './Components/AuthPage';
 import { gapi } from 'gapi-script';
 
 
 const apiKey = "AIzaSyBPJmfyTPfRPGV566hxysCCkv3H8TscVJQ"
-const clientId = "739140650399-hdlcrsphdb1eh83tgh95q5e9bop0nck6.apps.googleusercontent.com"
+const clientId = "739140650399-6etnsrh1jfpmcf09blp1v334u1thl0ls.apps.googleusercontent.com"
 const discoveryDocs = ["https://sheets.googleapis.com/$discovery/rest?version=v4"]
 const scopes = [
   "https://www.googleapis.com/auth/spreadsheets",
@@ -35,36 +33,27 @@ function App() {
   useEffect(() => {
     function start() {
       gapi.client.init({
-        clientId: clientId,
-        scope: "https://www.googleapis.com/auth/spreadsheets",
+        apiKey: apiKey,
         discoveryDocs: discoveryDocs
+      }).then(() => {
+        console.log("initialized")
+        chrome.identity.getAuthToken({interactive: true}, function(token) {
+          gapi.auth.setToken({
+            'access_token': token,
+          });
+        })
       });
     }
 
-    gapi.load('client:auth2', start);
+    gapi.load('client', start);
   }, []);
 
-  const onSuccess = response => {
-    console.log('SUCCESS', response);
-    setCredentials(response)
-    setLoggedIn(true)
-    const accessToken = gapi.auth.getToken().access_token;
-    console.log(accessToken);
+  const onClick = (e) => {
+    chrome.identity.getAuthToken({interactive: true}, function(token) {
+      console.log(token);
+      setLoggedIn(true)
+    })
   };
-  const onFailure = response => {
-    console.log('FAILED', response);
-  };
-
-  // const gapi = useGoogleApi({
-  //   apiKey: apiKey,
-  //   clientId: clientId,
-  //   discoveryDocs: discoveryDocs,
-  //   scopes: scopes
-  // })
-
-  // gapi.auth2.init()
-
-  // const auth = gapi?.auth2.getAuthInstance()
 
   return (
     
@@ -81,35 +70,11 @@ function App() {
             &times;
           </a>
           <br></br>
-          {/* {
-            !loggedIn?
-            <GoogleLogin
-              onSuccess={credentialResponse => {
-                console.log(credentialResponse)
-                setCredentials(credentialResponse)
-                setLoggedIn(true)
-              }}
-              onError={() => {
-                console.log('Login Failed');
-              }}
-              useOneTap
-              auto_select
-            /> : 
-              <GoogleApiProvider clientId={clientId}>
-                <Forms credentials={credentials}/>
-              </GoogleApiProvider>
-          } */}
           {
             !loggedIn?
-            <div>
-            <GoogleLogin
-              clientId={clientId}
-              onSuccess={onSuccess}
-              onFailure={onFailure}
-              useOneTap
-              auto_select
-            />
-            </div>:
+            <button onClick={onClick}>
+              Login
+            </button> :
             <Forms />
           }
         </div>
@@ -143,32 +108,11 @@ function Forms (credentials) {
   let currDate = moment().format("MM/DD/YYYY");
   const [dateApplied, setDateApplied] = useState(currDate);
   const changeDateApplied = event => setDateApplied(event.target.value);
-  
-  // const gapi = useGoogleApi({
-  //   apiKey: apiKey,
-  //   clientId: clientId,
-  //   discoveryDocs: discoveryDocs,
-  //   scopes: scopes
-  // })
-
-  // console.log(gapi)
-
-
-
-
-  // gapi.auth2?.init()
-
-  // gapi.auth.setToken(credentials.credential)
-
-  // auth?.isSignedIn.get()
-  // if (!auth?.isSignedIn.get()) 
-  // auth.signIn()
 
 
   const onSubmit = async (e) => {
     e.preventDefault()
     gapi.client.sheets.spreadsheets.batchUpdate({
-      auth: credentials.credential,
       spreadsheetId: spreadsheetId,
       requests: [
       {
@@ -186,7 +130,6 @@ function Forms (credentials) {
     ).then(console.log).then(() => 
 
     gapi.client.sheets.spreadsheets.values.batchUpdate({
-      auth: credentials.credential,
       spreadsheetId: spreadsheetId,
       data: [
         {

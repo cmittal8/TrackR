@@ -13,6 +13,21 @@
     "128": "tR.png"
   },
   "permissions": [
-    "activeTab"
-  ]
+    "activeTab",
+    "identity"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "oauth2": {
+    "client_id": "739140650399-6etnsrh1jfpmcf09blp1v334u1thl0ls.apps.googleusercontent.com",
+    "scopes": [
+      "profile",
+      "https://www.googleapis.com/auth/spreadsheets"
+    ]
+  },
+
+
+  "content_security_policy": "script-src 'self' https://accounts.google.com/gsi/client https://apis.google.com; object-src 'self'"
+
 }
