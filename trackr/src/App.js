@@ -2,12 +2,15 @@ import React from 'react';
 import logo from './official_tR.png';
 import 'reactjs-popup/dist/index.css';
 import './App.css';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import 'reactjs-popup/dist/index.css';
 import Popup from 'reactjs-popup'
 import moment from 'moment';
 import { GoogleLogin } from '@react-oauth/google';
 import { useGoogleApi, GoogleApiProvider } from 'react-gapi';
+import AuthPage from './Components/AuthPage';
+import { gapi } from 'gapi-script';
+
 
 const apiKey = "AIzaSyBPJmfyTPfRPGV566hxysCCkv3H8TscVJQ"
 const clientId = "739140650399-hdlcrsphdb1eh83tgh95q5e9bop0nck6.apps.googleusercontent.com"
@@ -17,7 +20,6 @@ const scopes = [
   "profile"
 ]
 const spreadsheetId = "1tHZnpezywsKwHmdCtDfXIBZ-Yn7MmliK4VI9_he9i7Q"
-const clientSecret = "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"
 
 
 
@@ -30,12 +32,37 @@ function App() {
   const [credentials, setCredentials] = useState(null)
   const closeModal = () => setOpen(false);
 
-  const gapi = useGoogleApi({
-    apiKey: apiKey,
-    clientId: clientId,
-    discoveryDocs: discoveryDocs,
-    scopes: scopes
-  })
+  useEffect(() => {
+    function start() {
+      gapi.client.init({
+        clientId: clientId,
+        scope: "https://www.googleapis.com/auth/spreadsheets",
+        discoveryDocs: discoveryDocs
+      });
+    }
+
+    gapi.load('client:auth2', start);
+  }, []);
+
+  const onSuccess = response => {
+    console.log('SUCCESS', response);
+    setCredentials(response)
+    setLoggedIn(true)
+    const accessToken = gapi.auth.getToken().access_token;
+    console.log(accessToken);
+  };
+  const onFailure = response => {
+    console.log('FAILED', response);
+  };
+
+  // const gapi = useGoogleApi({
+  //   apiKey: apiKey,
+  //   clientId: clientId,
+  //   discoveryDocs: discoveryDocs,
+  //   scopes: scopes
+  // })
+
+  // gapi.auth2.init()
 
   // const auth = gapi?.auth2.getAuthInstance()
 
@@ -54,7 +81,7 @@ function App() {
             &times;
           </a>
           <br></br>
-          {
+          {/* {
             !loggedIn?
             <GoogleLogin
               onSuccess={credentialResponse => {
@@ -71,14 +98,18 @@ function App() {
               <GoogleApiProvider clientId={clientId}>
                 <Forms credentials={credentials}/>
               </GoogleApiProvider>
-          }
-          {/* {
-            !auth
-              ? <span>Loading...</span>
-              : auth?.isSignedIn.get()
-                ? <Forms/>
-                : <button onClick={() => auth.signIn()}>Login</button>
           } */}
+          {
+            !loggedIn?
+            <div>
+            <GoogleLogin
+              clientId={clientId}
+              onSuccess={onSuccess}
+              onFailure={onFailure}
+            />
+            </div>:
+            <Forms />
+          }
         </div>
       </Popup>
       
@@ -111,29 +142,26 @@ function Forms (credentials) {
   const [dateApplied, setDateApplied] = useState(currDate);
   const changeDateApplied = event => setDateApplied(event.target.value);
   
-  const gapi = useGoogleApi({
-    apiKey: apiKey,
-    clientId: clientId,
-    discoveryDocs: discoveryDocs,
-    scopes: scopes
-  })
+  // const gapi = useGoogleApi({
+  //   apiKey: apiKey,
+  //   clientId: clientId,
+  //   discoveryDocs: discoveryDocs,
+  //   scopes: scopes
+  // })
 
-  console.log(gapi)
+  // console.log(gapi)
+
+
+
 
   // gapi.auth2?.init()
 
   // gapi.auth.setToken(credentials.credential)
 
-
-  const auth = gapi?.auth2.getAuthInstance()
-
-  console.log(auth)
-
   // auth?.isSignedIn.get()
   // if (!auth?.isSignedIn.get()) 
   // auth.signIn()
 
-  const sheets = gapi?.client.spreadsheets
 
   const onSubmit = async (e) => {
     e.preventDefault()
@@ -154,6 +182,7 @@ function Forms (credentials) {
       }
     ]}
     ).then(console.log)
+
     console.log(companyName + " " + jobTitle + " " + startDate + " " + currDate)
   }
   return (
