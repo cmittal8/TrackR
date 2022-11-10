@@ -7,14 +7,17 @@ import 'reactjs-popup/dist/index.css';
 import Popup from 'reactjs-popup'
 import moment from 'moment';
 import { GoogleLogin } from '@react-oauth/google';
+import { useGoogleApi, GoogleApiProvider } from 'react-gapi';
 
-var apiKey = "AIzaSyBPJmfyTPfRPGV566hxysCCkv3H8TscVJQ"
-var clientId = "739140650399-hdlcrsphdb1eh83tgh95q5e9bop0nck6.apps.googleusercontent.com"
-var discoveryDocs = ["https://sheets.googleapis.com/$discovery/rest?version=v4"]
-var scopes = [
+const apiKey = "AIzaSyBPJmfyTPfRPGV566hxysCCkv3H8TscVJQ"
+const clientId = "739140650399-hdlcrsphdb1eh83tgh95q5e9bop0nck6.apps.googleusercontent.com"
+const discoveryDocs = ["https://sheets.googleapis.com/$discovery/rest?version=v4"]
+const scopes = [
   "https://www.googleapis.com/auth/spreadsheets",
   "profile"
 ]
+const spreadsheetId = "1tHZnpezywsKwHmdCtDfXIBZ-Yn7MmliK4VI9_he9i7Q"
+const clientSecret = "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"
 
 
 
@@ -24,7 +27,17 @@ var scopes = [
 function App() {
   const [loggedIn, setLoggedIn] = useState(false)
   const [open, setOpen] = useState(false);
+  const [credentials, setCredentials] = useState(null)
   const closeModal = () => setOpen(false);
+
+  const gapi = useGoogleApi({
+    apiKey: apiKey,
+    clientId: clientId,
+    discoveryDocs: discoveryDocs,
+    scopes: scopes
+  })
+
+  // const auth = gapi?.auth2.getAuthInstance()
 
   return (
     
@@ -32,7 +45,6 @@ function App() {
       <header className="App-header">
         <img src={logo} className="App-logo" alt="logo" />
          &nbsp;&nbsp; 
-
         <button type="button" className="button" onClick={() => setOpen(o => !o)}>
         Track New Job!
       </button>
@@ -47,14 +59,26 @@ function App() {
             <GoogleLogin
               onSuccess={credentialResponse => {
                 console.log(credentialResponse)
+                setCredentials(credentialResponse)
                 setLoggedIn(true)
               }}
               onError={() => {
                 console.log('Login Failed');
               }}
               useOneTap
-            /> : <Forms/>
+              auto_select
+            /> : 
+              <GoogleApiProvider clientId={clientId}>
+                <Forms credentials={credentials}/>
+              </GoogleApiProvider>
           }
+          {/* {
+            !auth
+              ? <span>Loading...</span>
+              : auth?.isSignedIn.get()
+                ? <Forms/>
+                : <button onClick={() => auth.signIn()}>Login</button>
+          } */}
         </div>
       </Popup>
       
@@ -73,7 +97,7 @@ function App() {
   );
 }
 
-function Forms () {
+function Forms (credentials) {
   const [companyName, setCompanyName] = useState('');
   const changeCompanyName = event => setCompanyName(event.target.value);
 
@@ -86,52 +110,98 @@ function Forms () {
   let currDate = moment().format("MM/DD/YYYY");
   const [dateApplied, setDateApplied] = useState(currDate);
   const changeDateApplied = event => setDateApplied(event.target.value);
+  
+  const gapi = useGoogleApi({
+    apiKey: apiKey,
+    clientId: clientId,
+    discoveryDocs: discoveryDocs,
+    scopes: scopes
+  })
+
+  console.log(gapi)
+
+  // gapi.auth2?.init()
+
+  // gapi.auth.setToken(credentials.credential)
+
+
+  const auth = gapi?.auth2.getAuthInstance()
+
+  console.log(auth)
+
+  // auth?.isSignedIn.get()
+  // if (!auth?.isSignedIn.get()) 
+  // auth.signIn()
+
+  const sheets = gapi?.client.spreadsheets
+
+  const onSubmit = async (e) => {
+    e.preventDefault()
+    gapi.client.sheets.spreadsheets.batchUpdate({
+      auth: credentials.credential,
+      spreadsheetId: spreadsheetId,
+      requests: [
+      {
+        insertDimension: {
+          range: {
+            sheetId: 0,
+            dimension: "ROWS",
+            startIndex: 1,
+            endIndex: 2,
+          },
+          inheritFromBefore: false
+        }
+      }
+    ]}
+    ).then(console.log)
+    console.log(companyName + " " + jobTitle + " " + startDate + " " + currDate)
+  }
   return (
-  <>
+  <form onSubmit={onSubmit}>
     Company Name:
-          <input
-            type={"text"}
-            id="companyName"
-            onChange={changeCompanyName}
-            value={companyName}
-          />
-          <br></br>
+    <input
+      type={"text"}
+      id="companyName"
+      onChange={changeCompanyName}
+      value={companyName}
+    />
+    <br></br>
 
-          Job Title:
-          <input
-            type={"text"}
-            id="jobTitle"
-            onChange={changeJobTitle}
-            value={jobTitle}
-          />
+    Job Title:
+    <input
+      type={"text"}
+      id="jobTitle"
+      onChange={changeJobTitle}
+      value={jobTitle}
+    />
 
-          <br></br>
+    <br></br>
 
-          Start Date:
-          <input
-            type={"text"}
-            id="startDate"
-            onChange={changeStartDate}
-            value={startDate}
-          />
+    Start Date:
+    <input
+      type={"text"}
+      id="startDate"
+      onChange={changeStartDate}
+      value={startDate}
+    />
 
-          <br></br>
+    <br></br>
 
-          Date Applied:
-          <input
-            type={"text"}
-            id="dateApplied"
-            onChange={changeDateApplied}
-            value={dateApplied}
-          />
-          
+    Date Applied:
+    <input
+      type={"text"}
+      id="dateApplied"
+      onChange={changeDateApplied}
+      value={dateApplied}
+    />
+    
 
-          <br></br>
+    <br></br>
 
-          <button>
-            Submit
-          </button>
-  </>
+    <button type='submit'>
+      Submit
+    </button>
+  </form>
   );
 }
 

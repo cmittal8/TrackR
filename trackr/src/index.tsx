@@ -4,15 +4,18 @@ import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { GoogleOAuthProvider } from '@react-oauth/google';
+import { GoogleApiProvider } from 'react-gapi'
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
 root.render(
   <React.StrictMode>
+    <GoogleApiProvider clientId="739140650399-hdlcrsphdb1eh83tgh95q5e9bop0nck6.apps.googleusercontent.com">
     <GoogleOAuthProvider clientId="739140650399-hdlcrsphdb1eh83tgh95q5e9bop0nck6.apps.googleusercontent.com">
-    <App />
+      <App />
     </GoogleOAuthProvider>
+    </GoogleApiProvider>
   </React.StrictMode>
 );
 
