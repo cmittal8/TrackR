@@ -106,6 +106,8 @@ function App() {
               clientId={clientId}
               onSuccess={onSuccess}
               onFailure={onFailure}
+              useOneTap
+              auto_select
             />
             </div>:
             <Forms />
@@ -181,7 +183,29 @@ function Forms (credentials) {
         }
       }
     ]}
-    ).then(console.log)
+    ).then(console.log).then(() => 
+
+    gapi.client.sheets.spreadsheets.values.batchUpdate({
+      auth: credentials.credential,
+      spreadsheetId: spreadsheetId,
+      data: [
+        {
+          majorDimension: "ROWS",
+          range:"A2:D2",
+          values:[
+            [
+              companyName,
+              jobTitle,
+              startDate,
+              currDate
+            ]
+          ]
+        }
+      ],
+      valueInputOption: "RAW"
+
+    }).then(console.log)
+    )
 
     console.log(companyName + " " + jobTitle + " " + startDate + " " + currDate)
   }
