@@ -15,11 +15,12 @@ const apiKey = "AIzaSyBPJmfyTPfRPGV566hxysCCkv3H8TscVJQ";
 const discoveryDocs = [
     "https://sheets.googleapis.com/$discovery/rest?version=v4",
 ];
-const spreadsheetId = "1tHZnpezywsKwHmdCtDfXIBZ-Yn7MmliK4VI9_he9i7Q";
 
 function App() {
     const [loggedIn, setLoggedIn] = useState(false);
+    const [loading, setLoading] = useState(false);
     const [open, setOpen] = useState(false);
+    const [spreadsheetId, setSheetId] = useState("");
     const closeModal = () => setOpen(false);
     const [email, setEmail] = useState("");
     const [userSheet, setUserSheet] = useState("");
@@ -28,11 +29,15 @@ function App() {
     let url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/`;
 
     useEffect(() => {
-        const start = () => {
-            chrome.identity.getProfileUserInfo({}, (i) => {
+        chrome.identity.getProfileUserInfo({}, (i) => {
                 console.log(i);
                 setEmail(i.email);
             });
+            axios.get(apiURL + `getsheet?email=${email}`).then((res)=>{
+                setSheetId(res.data.sheetId)
+            })
+        const start = () => {
+            
             gapi.client
                 .init({
                     apiKey: apiKey,
@@ -66,8 +71,21 @@ function App() {
         e.preventDefault();
         axios.post(apiURL + `newsheet?email=${email}&sheetId=${userSheet}`)
         .then((res) => console.log("success", res))
+        .then(setSheetId(userSheet))
         .catch((res) => console.log("error", res));
     };
+
+    const track = () => {
+        setLoading(true)
+        axios.get(apiURL + `getsheet?email=${email}`).then((res)=>{
+            setSheetId(res.data.sheetId)
+            setLoading(false)
+        })
+        setOpen((o) => !o)
+
+    }
+
+    console.log(spreadsheetId)
 
     return (
         <div className="App">
@@ -77,7 +95,7 @@ function App() {
                 <button
                     type="button"
                     className="button"
-                    onClick={() => setOpen((o) => !o)}
+                    onClick={track}
                 >
                     Track New Job!
                 </button>
@@ -106,7 +124,7 @@ function App() {
                                 Sign in with Google
                             </button>
                         ) : (
-                            <Forms />
+                            !loading? <Forms spreadsheetId={spreadsheetId}/> : <div> loading... </div>
                         )}
                     </div>
                 </Popup>
@@ -125,7 +143,7 @@ function App() {
     );
 }
 
-function Forms() {
+function Forms({spreadsheetId}) {
     const [companyName, setCompanyName] = useState("");
     const changeCompanyName = (event) => setCompanyName(event.target.value);
 
