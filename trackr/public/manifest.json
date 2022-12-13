@@ -14,7 +14,9 @@
   },
   "permissions": [
     "activeTab",
-    "identity"
+    "identity",
+    "identity.email",
+    "https://efy1mn4ye6.execute-api.us-east-1.amazonaws.com/*"
   ],
   "background": {
     "service_worker": "background.js"
