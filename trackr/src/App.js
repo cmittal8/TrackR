@@ -15,10 +15,11 @@ const apiKey = "AIzaSyBPJmfyTPfRPGV566hxysCCkv3H8TscVJQ";
 const discoveryDocs = [
     "https://sheets.googleapis.com/$discovery/rest?version=v4",
 ];
-const spreadsheetId = "1tHZnpezywsKwHmdCtDfXIBZ-Yn7MmliK4VI9_he9i7Q";
+var spreadsheetId = "1tHZnpezywsKwHmdCtDfXIBZ-Yn7MmliK4VI9_he9i7Q";
 
 function App() {
     const [loggedIn, setLoggedIn] = useState(false);
+    const [loading, setLoading] = useState(false);
     const [open, setOpen] = useState(false);
     const closeModal = () => setOpen(false);
     const [email, setEmail] = useState("");
@@ -69,6 +70,16 @@ function App() {
         .catch((res) => console.log("error", res));
     };
 
+    const track = () => {
+        setLoading(true)
+        axios.get(apiURL + `getsheet?email=${email}`).then((res)=>{
+            spreadsheetId = res.data.sheetId
+            setLoading(false)
+        })
+        setOpen((o) => !o)
+
+    }
+
     return (
         <div className="App">
             <header className="App-header">
@@ -77,7 +88,7 @@ function App() {
                 <button
                     type="button"
                     className="button"
-                    onClick={() => setOpen((o) => !o)}
+                    onClick={track}
                 >
                     Track New Job!
                 </button>
@@ -106,7 +117,7 @@ function App() {
                                 Sign in with Google
                             </button>
                         ) : (
-                            <Forms />
+                            !loading? <Forms/> : <div> loading... </div>
                         )}
                     </div>
                 </Popup>
